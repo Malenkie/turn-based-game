@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Turn-Based Battle</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+    #log {
+      white-space: pre-wrap;
+      margin-top: 1rem;
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Turn-Based Battle</h1>
+
+  <div id="status"></div>
+  <div id="buttons"></div>
+  <div id="log"></div>
+
+  <script>
+    // Player and Enemy
+    const player = {
+      name: "Your Character",
+      health: 100,
+      max_health: 100,
+      attack: 10
+    };
+
+    const enemy = {
+      name: "Enemy",
+      health: 100,
+      max_health: 100,
+      attack: 20
+    };
+
+    // Abilities
+    const abilities = {
+      Heavy: {
+        name: "Heavy Attack",
+        description: "Heavy hitting attack with a low chance to hit.",
+        damage_multiplier: 1.5,
+        hit_chance: 0.4,
+        type: "offensive"
+      },
+      Light: {
+        name: "Light Attack",
+        description: "Light attack with a high chance to hit.",
+        damage_multiplier: 0.8,
+        hit_chance: 0.9,
+        type: "offensive"
+      },
+      Accurate: {
+        name: "Sure Strike",
+        description: "Weak attack that always hits.",
+        damage_multiplier: 0.4,
+        hit_chance: 1,
+        type: "offensive"
+      },
+      Heal: {
+        name: "Flash Heal",
+        description: "Heals you for a small amount.",
+        damage_multiplier: 1.5,
+        hit_chance: 1,
+        type: "defensive"
+      }
+    };
+
+    // Helpers
+    function updateStatus() {
+      document.getElementById("status").innerText =
+        `${player.name} HP: ${player.health} | ${enemy.name} HP: ${enemy.health}`;
+    }
+
+    function log(message) {
+      const logDiv = document.getElementById("log");
+      logDiv.innerText = message + "\n" + logDiv.innerText;
+    }
+
+    function checkEnd() {
+      if (player.health <= 0) {
+        log("You lose!");
+        document.getElementById("buttons").innerHTML = "";
+        return true;
+      }
+      if (enemy.health <= 0) {
+        log("You win!");
+        document.getElementById("buttons").innerHTML = "";
+        return true;
+      }
+      return false;
+    }
+
+    function enemyTurn() {
+      const offensive = Object.entries(abilities).filter(
+        ([k, v]) => v.type === "offensive"
+      );
+      const [key, ability] = offensive[Math.floor(Math.random() * offensive.length)];
+
+      log(`${enemy.name} used ${ability.name}!`);
+      const hitRoll = Math.random();
+      if (hitRoll > ability.hit_chance) {
+        log("...but it missed!");
+      } else {
+        const damage = Math.floor(ability.damage_multiplier * enemy.attack);
+        player.health = Math.max(player.health - damage, 0);
+        log(`It hit for ${damage} damage!`);
+      }
+      updateStatus();
+      checkEnd();
+    }
+
+    function playerAction(abilityKey) {
+      const ability = abilities[abilityKey];
+      log(`You used ${ability.name}!`);
+
+      if (ability.type === "offensive") {
+        const hitRoll = Math.random();
+        if (hitRoll > ability.hit_chance) {
+          log("...but it missed!");
+        } else {
+          const damage = Math.floor(ability.damage_multiplier * player.attack);
+          enemy.health = Math.max(enemy.health - damage, 0);
+          log(`It hit for ${damage} damage!`);
+        }
+      } else {
+        const heal = Math.floor(ability.damage_multiplier * player.attack);
+        player.health = Math.min(player.health + heal, player.max_health);
+        log(`You healed for ${heal} health!`);
+      }
+
+      updateStatus();
+      if (!checkEnd()) {
+        setTimeout(enemyTurn, 500);
+      }
+    }
+
+    function renderButtons() {
+      const container = document.getElementById("buttons");
+      container.innerHTML = "";
+      for (const [key, ability] of Object.entries(abilities)) {
+        const btn = document.createElement("button");
+        btn.innerText = ability.name;
+        btn.title = ability.description;
+        btn.onclick = () => playerAction(key);
+        container.appendChild(btn);
+      }
+    }
+
+    // Initialize
+    updateStatus();
+    renderButtons();
+  </script>
+</body>
+</html>
