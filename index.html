@@ -89,7 +89,8 @@
 
     function log(message) {
       const logDiv = document.getElementById("log");
-      logDiv.innerText = message + "\n" + logDiv.innerText;
+      logDiv.innerText += message + "\n";
+      logDiv.scrollTop = logDiv.scrollHeight;
     }
 
     function checkEnd() {
